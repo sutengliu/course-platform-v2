@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生端 - 课程学习平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        /* 登录/注册页面样式 */
+        .auth-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 90%;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2000;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auth-header h1 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .auth-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .auth-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .switch-auth {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .switch-auth a {
+            color: #667eea;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .switch-auth a:hover {
+            text-decoration: underline;
+        }
+
+        .status-message {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .status-message.success {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-message.error {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .phone-input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .phone-input-group input {
+            flex: 1;
+        }
+
+        .verify-btn {
+            padding: 12px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .verify-btn:hover:not(:disabled) {
+            background: #5568d3;
+        }
+
+        .verify-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* 遮罩层 */
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1999;
+        }
+
+        /* 头部导航 */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-bar input {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 25px;
+            width: 300px;
+            font-size: 14px;
+        }
+
+        .search-bar button {
+            padding: 10px 20px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar button:hover {
+            transform: scale(1.05);
+        }
+
+        .login-btn {
+            padding: 10px 25px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 筛选栏 */
+        .filter-bar {
+            background: white;
+            padding: 20px 40px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .filter-bar select,
+        .filter-bar input {
+            padding: 8px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .filter-bar select:focus,
+        .filter-bar input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .stats-info {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .stat-item .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        /* 视频卡片网格 */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .video-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .video-thumbnail {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-thumbnail video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .play-icon {
+            position: absolute;
+            font-size: 60px;
+            color: white;
+            opacity: 0.9;
+        }
+
+        .video-info {
+            padding: 20px;
+        }
+
+        .video-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .video-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+
+        .subject-badge {
+            padding: 5px 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .teacher-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9ff;
+            border-radius: 8px;
+        }
+
+        .teacher-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .teacher-details {
+            flex: 1;
+        }
+
+        .teacher-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .upload-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .course-intro-preview {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .view-more-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .view-more-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #999;
+        }
+
+        .empty-state .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 32px;
+            cursor: pointer;
+            color: #999;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #333;
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-video {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+
+        .detail-section {
+            margin-bottom: 25px;
+        }
+
+        .detail-section h3 {
+            color: #667eea;
+            font-size: 18px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .detail-section p {
+            color: #666;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        .teacher-profile {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .teacher-profile h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .no-data {
+            color: #999;
+            font-style: italic;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 20px;
+            }
+
+            .search-bar input {
+                width: 200px;
+            }
+
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录/注册遮罩层 -->
+    <div class="auth-overlay" id="authOverlay"></div>
+
+    <!-- 登录页面 -->
+    <div class="auth-container" id="loginPage">
+        <div class="auth-header">
+            <h1>🎓 学生登录</h1>
+            <p>请登录以浏览课程</p>
+        </div>
+        
+        <form id="studentLoginForm">
+            <div class="form-group">
+                <label for="studentUsername">用户名</label>
+                <input type="text" id="studentUsername" placeholder="请输入用户名" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="studentPassword">密码</label>
+                <input type="password" id="studentPassword" placeholder="请输入密码" required>
+            </div>
+            
+            <button type="submit" class="auth-btn" id="studentLoginBtn">登录</button>
+        </form>
+        
+        <div class="status-message" id="loginStatus"></div>
+        
+        <div class="switch-auth">
+            还没有账号？<a onclick="showStudentRegister()">立即注册</a>
+        </div>
+        
+        <div style="text-align: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
+            <a href="teacher.html" style="color: #764ba2; text-decoration: none; font-size: 14px;">👨‍ 教师端登录</a>
+        </div>
+    </div>
+
+    <!-- 注册页面 -->
+    <div class="auth-container hidden" id="registerPage">
+        <div class="auth-header">
+            <h1>📱 学生注册</h1>
+            <p>使用手机号快速注册</p>
+        </div>
+        
+        <form id="studentRegisterForm">
+            <div class="form-group">
+                <label for="regStudentUsername">用户名</label>
+                <input type="text" id="regStudentUsername" placeholder="请设置用户名（3-20位）" required minlength="3" maxlength="20">
+            </div>
+            
+            <div class="form-group">
+                <label for="regStudentPhone">手机号</label>
+                <div class="phone-input-group">
+                    <input type="tel" id="regStudentPhone" placeholder="请输入11位手机号" required pattern="^1[3-9]\d{9}$" maxlength="11">
+                    <button type="button" class="verify-btn" id="sendStudentCodeBtn" onclick="sendStudentVerifyCode()">获取验证码</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="regStudentCode">验证码</label>
+                <input type="text" id="regStudentCode" placeholder="请输入6位验证码" required maxlength="6" pattern="^\d{6}$">
+            </div>
+            
+            <div class="form-group">
+                <label for="regStudentPassword">密码</label>
+                <input type="password" id="regStudentPassword" placeholder="请设置密码（6-20位）" required minlength="6" maxlength="20">
+            </div>
+            
+            <div class="form-group">
+                <label for="regStudentConfirmPassword">确认密码</label>
+                <input type="password" id="regStudentConfirmPassword" placeholder="请再次输入密码" required>
+            </div>
+            
+            <button type="submit" class="auth-btn" id="studentRegisterBtn">注册</button>
+        </form>
+        
+        <div class="status-message" id="registerStatus"></div>
+        
+        <div class="switch-auth">
+            已有账号？<a onclick="showStudentLogin()">立即登录</a>
+        </div>
+        
+        <div style="text-align: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
+            <a href="teacher.html" style="color: #764ba2; text-decoration: none; font-size: 14px;">👨‍ 教师端登录</a>
+        </div>
+    </div>
+
+    <!-- 主内容区（登录后显示） -->
+    <div id="mainApp" class="hidden">
+    <!-- 头部导航 -->
+    <div class="header">
+        <h1>🎓 课程学习平台</h1>
+        <div class="header-actions">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="搜索课程、老师或学科...">
+                <button onclick="searchVideos()">🔍 搜索</button>
+            </div>
+            <span id="studentUserInfo" style="color: white; font-weight: bold;"></span>
+            <button class="login-btn" onclick="studentLogout()">退出登录</button>
+        </div>
+    </div>
+
+    <!-- 筛选栏 -->
+    <div class="filter-bar">
+        <label>筛选：</label>
+        <select id="subjectFilter" onchange="filterVideos()">
+            <option value="">全部学科</option>
+        </select>
+        <input type="text" id="teacherFilter" placeholder="输入老师姓名" oninput="filterVideos()">
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+        <!-- 统计信息 -->
+        <div class="stats-info">
+            <div class="stat-item">
+                <h3>课程总数</h3>
+                <div class="value" id="totalCourses">0</div>
+            </div>
+            <div class="stat-item">
+                <h3>教师人数</h3>
+                <div class="value" id="totalTeachers">0</div>
+            </div>
+            <div class="stat-item">
+                <h3>学科数量</h3>
+                <div class="value" id="totalSubjects">0</div>
+            </div>
+        </div>
+
+        <!-- 视频列表 -->
+        <div class="video-grid" id="videoGrid">
+            <!-- 动态生成视频卡片 -->
+        </div>
+
+        <!-- 空状态 -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="icon">📚</div>
+            <h3>暂无课程</h3>
+            <p>还没有老师上传课程，敬请期待！</p>
+        </div>
+    </div>
+    </div>
+
+    <!-- 视频详情模态框 -->
+    <div class="modal" id="videoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">课程详情</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <video id="modalVideo" class="modal-video" controls></video>
+                
+                <div class="detail-section">
+                    <h3>📚 课程信息</h3>
+                    <p><strong>学科：</strong><span id="modalSubject"></span></p>
+                    <p><strong>上传者：</strong><span id="modalUploader"></span></p>
+                    <p><strong>上传时间：</strong><span id="modalUploadTime"></span></p>
+                </div>
+
+                <div class="detail-section">
+                    <h3>📖 课程简介</h3>
+                    <p id="modalCourseIntro"></p>
+                </div>
+
+                <div class="teacher-profile">
+                    <h3>👨‍🏫 教师简介</h3>
+                    <p id="modalPersonalIntro"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== API配置 ====================
+        const API_BASE = 'https://video-cse-api-v-fyiixqxwn.cn-hangzhou.fcapp.run/api';
+        let authToken = localStorage.getItem('authToken');
+
+        // API请求辅助函数
+        async function apiRequest(endpoint, options = {}) {
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            if (authToken) {
+                defaultOptions.headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    ...defaultOptions,
+                    ...options
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || '请求失败');
+                }
+
+                return data;
+            } catch (error) {
+                console.error('API请求错误:', error);
+                throw error;
+            }
+        }
+
+        // 保存token
+        function saveToken(token) {
+            authToken = token;
+            localStorage.setItem('authToken', token);
+        }
+
+        // 清除token
+        function clearToken() {
+            authToken = null;
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('studentUser');
+        }
+
+        let allVideos = [];
+        let filteredVideos = [];
+
+        // 检查登录状态
+        function checkStudentLogin() {
+            const studentUser = localStorage.getItem('studentUser');
+            if (studentUser) {
+                showMainApp(studentUser);
+            } else {
+                showLoginPage();
+            }
+        }
+
+        // 显示登录页面
+        function showLoginPage() {
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('registerPage').classList.add('hidden');
+            document.getElementById('authOverlay').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+        }
+
+        // 显示注册页面
+        function showStudentRegister() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('registerPage').classList.remove('hidden');
+            hideRegisterStatus();
+        }
+
+        // 显示登录页面（从注册切换）
+        function showStudentLogin() {
+            document.getElementById('registerPage').classList.add('hidden');
+            document.getElementById('loginPage').classList.remove('hidden');
+            hideLoginStatus();
+        }
+
+        // 显示主应用
+        function showMainApp(username) {
+            document.getElementById('authOverlay').classList.add('hidden');
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('registerPage').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            document.getElementById('studentUserInfo').textContent = `👤 ${username}`;
+            
+            // 初始化应用
+            init();
+        }
+
+        // 学生登录表单提交
+        document.getElementById('studentLoginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('studentUsername').value.trim();
+            const password = document.getElementById('studentPassword').value;
+            
+            if (!username || !password) {
+                showLoginStatus('请填写用户名和密码！', 'error');
+                return;
+            }
+            
+            const loginBtn = document.getElementById('studentLoginBtn');
+            loginBtn.disabled = true;
+            loginBtn.textContent = '登录中...';
+            
+            try {
+                const result = await apiRequest('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (result.success) {
+                    saveToken(result.data.token);
+                    localStorage.setItem('studentUser', result.data.user.username);
+                    showMainApp(result.data.user.username);
+                    showLoginStatus('登录成功！', 'success');
+                    
+                    // 清空表单
+                    document.getElementById('studentUsername').value = '';
+                    document.getElementById('studentPassword').value = '';
+                }
+            } catch (error) {
+                showLoginStatus(error.message || '登录失败！', 'error');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = '登录';
+            }
+        });
+
+        // 发送学生验证码
+        let studentCodeTimer = null;
+
+        async function sendStudentVerifyCode() {
+            const phone = document.getElementById('regStudentPhone').value.trim();
+            
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                showRegisterStatus('请输入正确的手机号！', 'error');
+                return;
+            }
+            
+            const sendCodeBtn = document.getElementById('sendStudentCodeBtn');
+            
+            try {
+                // 调用API发送验证码
+                const response = await fetch(`${API_BASE}/auth/send-code`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone })
+                });
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.message || '发送失败');
+                }
+                
+                // 开发模式：显示验证码（生产环境应删除）
+                if (result.dev_code) {
+                    console.log('【开发模式】验证码:', result.dev_code);
+                    alert(`【开发模式】验证码：${result.dev_code}\n\n生产环境将发送到手机`);
+                }
+                
+                // 开始倒计时
+                let countdown = 60;
+                sendCodeBtn.disabled = true;
+                sendCodeBtn.textContent = `${countdown}秒后重试`;
+                
+                studentCodeTimer = setInterval(() => {
+                    countdown--;
+                    if (countdown <= 0) {
+                        clearInterval(studentCodeTimer);
+                        sendCodeBtn.disabled = false;
+                        sendCodeBtn.textContent = '获取验证码';
+                    } else {
+                        sendCodeBtn.textContent = `${countdown}秒后重试`;
+                    }
+                }, 1000);
+                
+                showRegisterStatus('✅ 验证码已发送，请注意查收！', 'success');
+            } catch (error) {
+                console.error('发送验证码失败:', error);
+                showRegisterStatus('❌ ' + error.message, 'error');
+            }
+        }
+
+        // 学生注册表单提交
+        document.getElementById('studentRegisterForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('regStudentUsername').value.trim();
+            const phone = document.getElementById('regStudentPhone').value.trim();
+            const code = document.getElementById('regStudentCode').value.trim();
+            const password = document.getElementById('regStudentPassword').value;
+            const confirmPassword = document.getElementById('regStudentConfirmPassword').value;
+            
+            // 验证用户名
+            if (username.length < 3 || username.length > 20) {
+                showRegisterStatus('用户名长度为3-20位！', 'error');
+                return;
+            }
+            
+            // 验证手机号
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                showRegisterStatus('请输入正确的手机号！', 'error');
+                return;
+            }
+            
+            // 验证验证码（调用API）
+            if (!code || code.length !== 6) {
+                showRegisterStatus('请输入6位验证码！', 'error');
+                return;
+            }
+            
+            try {
+                const verifyResponse = await fetch(`${API_BASE}/auth/verify-code`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone, code })
+                });
+                
+                const verifyResult = await verifyResponse.json();
+                
+                if (!verifyResult.success) {
+                    showRegisterStatus('❌ ' + verifyResult.message, 'error');
+                    return;
+                }
+            } catch (error) {
+                console.error('验证失败:', error);
+                showRegisterStatus('❌ 验证失败，请重试', 'error');
+                return;
+            }
+            
+            // 验证密码
+            if (password.length < 6 || password.length > 20) {
+                showRegisterStatus('密码长度为6-20位！', 'error');
+                return;
+            }
+            
+            // 验证确认密码
+            if (password !== confirmPassword) {
+                showRegisterStatus('两次输入的密码不一致！', 'error');
+                return;
+            }
+            
+            // 检查用户名是否已存在（由后端验证）
+            // 检查手机号是否已注册（由后端验证）
+            
+            const registerBtn = document.getElementById('studentRegisterBtn');
+            registerBtn.disabled = true;
+            registerBtn.textContent = '注册中...';
+            
+            try {
+                const result = await apiRequest('/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        username,
+                        password,
+                        phone,
+                        role: 'student'
+                    })
+                });
+                
+                if (result.success) {
+                    showRegisterStatus('注册成功！即将跳转到登录页面...', 'success');
+                    
+                    // 清空表单
+                    document.getElementById('regStudentUsername').value = '';
+                    document.getElementById('regStudentPhone').value = '';
+                    document.getElementById('regStudentCode').value = '';
+                    document.getElementById('regStudentPassword').value = '';
+                    document.getElementById('regStudentConfirmPassword').value = '';
+                    studentVerifyCode = '';
+                    
+                    // 2秒后跳转到登录页面
+                    setTimeout(() => {
+                        showStudentLogin();
+                        registerBtn.disabled = false;
+                        registerBtn.textContent = '注册';
+                        
+                        // 清除倒计时
+                        if (studentCodeTimer) {
+                            clearInterval(studentCodeTimer);
+                            document.getElementById('sendStudentCodeBtn').disabled = false;
+                            document.getElementById('sendStudentCodeBtn').textContent = '获取验证码';
+                        }
+                    }, 2000);
+                }
+            } catch (error) {
+                showRegisterStatus(error.message || '注册失败！', 'error');
+                registerBtn.disabled = false;
+                registerBtn.textContent = '注册';
+            }
+        });
+
+        // 学生退出登录
+        function studentLogout() {
+            clearToken();
+            showLoginPage();
+            
+            // 重置应用状态
+            allVideos = [];
+            filteredVideos = [];
+        }
+
+        // 显示登录状态消息
+        function showLoginStatus(message, type) {
+            const loginStatus = document.getElementById('loginStatus');
+            loginStatus.textContent = message;
+            loginStatus.className = 'status-message ' + type;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    loginStatus.className = 'status-message';
+                }, 2000);
+            }
+        }
+
+        // 隐藏登录状态消息
+        function hideLoginStatus() {
+            document.getElementById('loginStatus').className = 'status-message';
+        }
+
+        // 显示注册状态消息
+        function showRegisterStatus(message, type) {
+            const registerStatus = document.getElementById('registerStatus');
+            registerStatus.textContent = message;
+            registerStatus.className = 'status-message ' + type;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    registerStatus.className = 'status-message';
+                }, 3000);
+            }
+        }
+
+        // 隐藏注册状态消息
+        function hideRegisterStatus() {
+            document.getElementById('registerStatus').className = 'status-message';
+        }
+
+        // 初始化
+        async function init() {
+            await loadVideos();
+            renderVideos();
+            updateStats();
+            populateSubjectFilter();
+        }
+
+        // 页面加载时检查登录状态
+        window.addEventListener('DOMContentLoaded', checkStudentLogin);
+
+        // 加载视频数据
+        async function loadVideos() {
+            try {
+                const result = await apiRequest('/videos?status=approved&page=1&limit=100');
+                allVideos = result.data || [];
+                filteredVideos = [...allVideos];
+            } catch (error) {
+                console.error('加载视频失败:', error);
+                allVideos = [];
+                filteredVideos = [];
+            }
+        }
+
+        // 渲染视频列表
+        function renderVideos() {
+            const grid = document.getElementById('videoGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            if (filteredVideos.length === 0) {
+                grid.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            grid.innerHTML = filteredVideos.map(video => createVideoCard(video)).join('');
+        }
+
+        // 创建视频卡片
+        function createVideoCard(video) {
+            // 获取教师信息
+            const profiles = JSON.parse(localStorage.getItem('teacherProfiles')) || [];
+            const profile = profiles.find(p => p.username === video.uploader && p.status === 'approved');
+            
+            const teacherName = profile ? profile.name : (video.uploader || '未知老师');
+            const teacherInitial = teacherName.charAt(0).toUpperCase();
+            const teacherPhoto = profile ? profile.photo : null;
+            
+            return `
+                <div class="video-card" onclick="showVideoDetail(${video.id})">
+                    <div class="video-thumbnail">
+                        <div class="play-icon">▶️</div>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-header">
+                            <div>
+                                <div class="video-title">${escapeHtml(video.name)}</div>
+                            </div>
+                            <span class="subject-badge">${escapeHtml(video.subject || '未分类')}</span>
+                        </div>
+                        
+                        <div class="teacher-info">
+                            ${teacherPhoto ? 
+                                `<img src="${teacherPhoto}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">` :
+                                `<div class="teacher-avatar">${teacherInitial}</div>`
+                            }
+                            <div class="teacher-details">
+                                <div class="teacher-name">${escapeHtml(teacherName)}</div>
+                                <div class="upload-time">${video.uploadTime || '未知时间'}</div>
+                            </div>
+                        </div>
+
+                        <div class="course-intro-preview">
+                            ${escapeHtml(video.courseIntro || '暂无课程简介')}
+                        </div>
+
+                        <button class="view-more-btn">查看详情</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 显示视频详情
+        function showVideoDetail(videoId) {
+            const video = allVideos.find(v => v.id === videoId);
+            if (!video) return;
+
+            // 获取教师信息
+            const profiles = JSON.parse(localStorage.getItem('teacherProfiles')) || [];
+            const profile = profiles.find(p => p.username === video.uploader && p.status === 'approved');
+            
+            const teacherName = profile ? profile.name : (video.uploader || '未知');
+
+            document.getElementById('modalTitle').textContent = video.name;
+            document.getElementById('modalSubject').textContent = video.subject || '未填写';
+            document.getElementById('modalUploader').textContent = teacherName;
+            document.getElementById('modalUploadTime').textContent = video.uploadTime || '未知';
+            document.getElementById('modalCourseIntro').textContent = video.courseIntro || '暂无课程简介';
+            
+            // 显示教师详细信息
+            if (profile) {
+                document.getElementById('modalPersonalIntro').innerHTML = `
+                    <div style="margin-bottom: 15px;">
+                        <img src="${profile.photo}" alt="${profile.name}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;">
+                        <p><strong>姓名：</strong>${profile.name}</p>
+                        <p><strong>所教科目：</strong>${profile.subject}</p>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <h4 style="color: #667eea; margin-bottom: 10px;">个人简介</h4>
+                        <p>${profile.intro}</p>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <h4 style="color: #667eea; margin-bottom: 10px;">学习、执教经历</h4>
+                        <p>${profile.experience}</p>
+                    </div>
+                `;
+            } else {
+                document.getElementById('modalPersonalIntro').textContent = video.personalIntro || '暂无个人简介';
+            }
+
+            // 注意：这里无法播放实际视频文件，因为只保存了元数据
+            // 实际项目中需要从服务器获取视频URL
+            const videoElement = document.getElementById('modalVideo');
+            
+            // 检查是否有有效的视频URL
+            if (video.videoUrl && video.videoUrl.startsWith('http')) {
+                // 如果是完整的HTTP URL，尝试播放
+                videoElement.src = video.videoUrl;
+                videoElement.style.display = 'block';
+            } else if (video.videoUrl && video.videoUrl.startsWith('/uploads/')) {
+                // 如果是本地路径，显示提示
+                videoElement.style.display = 'none';
+                
+                // 添加提示信息
+                let noticeDiv = document.getElementById('videoNotice');
+                if (!noticeDiv) {
+                    noticeDiv = document.createElement('div');
+                    noticeDiv.id = 'videoNotice';
+                    noticeDiv.className = 'detail-section';
+                    noticeDiv.style.background = '#fff3cd';
+                    noticeDiv.style.padding = '15px';
+                    noticeDiv.style.borderRadius = '8px';
+                    noticeDiv.style.marginBottom = '20px';
+                    noticeDiv.innerHTML = `
+                        <h4 style="color: #856404; margin-bottom: 10px;">⚠️ 视频播放说明</h4>
+                        <p style="color: #856404; line-height: 1.6;">
+                            当前视频存储在服务器本地，由于技术限制暂时无法在线播放。<br>
+                            如需观看完整视频，请联系管理员或等待系统升级。
+                        </p>
+                    `;
+                    // 插入到视频元素后面
+                    videoElement.parentNode.insertBefore(noticeDiv, videoElement.nextSibling);
+                }
+            } else {
+                // 没有视频URL
+                videoElement.style.display = 'none';
+            }
+
+            document.getElementById('videoModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('videoModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+            const videoElement = document.getElementById('modalVideo');
+            videoElement.pause();
+            videoElement.src = '';
+            
+            // 移除视频播放提示
+            const noticeDiv = document.getElementById('videoNotice');
+            if (noticeDiv) {
+                noticeDiv.remove();
+            }
+        }
+
+        // 搜索视频
+        function searchVideos() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+            
+            if (!keyword) {
+                filteredVideos = [...allVideos];
+            } else {
+                filteredVideos = allVideos.filter(video => 
+                    (video.name && video.name.toLowerCase().includes(keyword)) ||
+                    (video.uploader && video.uploader.toLowerCase().includes(keyword)) ||
+                    (video.subject && video.subject.toLowerCase().includes(keyword)) ||
+                    (video.courseIntro && video.courseIntro.toLowerCase().includes(keyword))
+                );
+            }
+            
+            renderVideos();
+        }
+
+        // 筛选视频
+        function filterVideos() {
+            const subject = document.getElementById('subjectFilter').value;
+            const teacher = document.getElementById('teacherFilter').value.toLowerCase().trim();
+
+            filteredVideos = allVideos.filter(video => {
+                const matchSubject = !subject || (video.subject && video.subject === subject);
+                const matchTeacher = !teacher || (video.uploader && video.uploader.toLowerCase().includes(teacher));
+                return matchSubject && matchTeacher;
+            });
+
+            renderVideos();
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            document.getElementById('totalCourses').textContent = allVideos.length;
+            
+            const teachers = new Set(allVideos.map(v => v.uploader).filter(Boolean));
+            document.getElementById('totalTeachers').textContent = teachers.size;
+            
+            const subjects = new Set(allVideos.map(v => v.subject).filter(Boolean));
+            document.getElementById('totalSubjects').textContent = subjects.size;
+        }
+
+        // 填充学科筛选器
+        function populateSubjectFilter() {
+            const subjects = [...new Set(allVideos.map(v => v.subject).filter(Boolean))];
+            const select = document.getElementById('subjectFilter');
+            
+            subjects.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject;
+                option.textContent = subject;
+                select.appendChild(option);
+            });
+        }
+
+        // 跳转到登录页面
+        function goToLogin() {
+            window.location.href = 'teacher.html';
+        }
+
+        // HTML转义，防止XSS攻击
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 点击模态框外部关闭
+        document.getElementById('videoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // 搜索框回车事件
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchVideos();
+            }
+        });
+
+        // 点击模态框外部关闭
+        document.getElementById('videoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

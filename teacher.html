@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频上传系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .upload-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+        }
+
+        .upload-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            color: #999;
+            font-size: 14px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .video-preview {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .video-preview.active {
+            display: block;
+        }
+
+        .video-info {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .video-name {
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .video-size {
+            color: #666;
+            font-size: 14px;
+        }
+
+        video {
+            width: 100%;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .progress-bar.active {
+            display: block;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .cancel-btn {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .cancel-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .status-message {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .status-message.success {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-message.error {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* 登录页面样式 */
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .user-info span {
+            color: #333;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #ff5252;
+            transform: translateY(-1px);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .admin-link {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .admin-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .admin-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* 视频列表样式 */
+        .video-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .video-item {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .video-item:hover {
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            transform: translateX(5px);
+        }
+
+        .video-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .video-item-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            flex: 1;
+        }
+
+        .video-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .video-item-info {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .video-item-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-delete {
+            padding: 6px 16px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-delete:hover {
+            background: #ff5252;
+            transform: translateY(-1px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        /* 个人信息表单样式 */
+        .profile-form-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 700px;
+            width: 90%;
+        }
+
+        .profile-form h3 {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 22px;
+            text-align: center;
+        }
+
+        .photo-upload {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .photo-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 3px dashed #667eea;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+
+        .photo-preview:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-preview .placeholder {
+            color: #999;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .photo-hint {
+            color: #666;
+            font-size: 13px;
+        }
+
+        /* 注册页面样式 */
+        .register-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .phone-input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .phone-input-group input {
+            flex: 1;
+        }
+
+        .verify-btn {
+            padding: 12px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .verify-btn:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+
+        .verify-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .switch-form {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .switch-form a {
+            color: #667eea;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .switch-form a:hover {
+            text-decoration: underline;
+        }
+
+        /* 课程信息表单样式 */
+        .course-form {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9ff;
+            border-radius: 15px;
+            display: none;
+        }
+
+        .course-form.active {
+            display: block;
+        }
+
+        .course-form h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .course-form .form-group {
+            margin-bottom: 20px;
+        }
+
+        .course-form label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .course-form label .required {
+            color: #ff6b6b;
+            margin-left: 3px;
+        }
+
+        .course-form input,
+        .course-form select,
+        .course-form textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+
+        .course-form input:focus,
+        .course-form select:focus,
+        .course-form textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .course-form textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div class="login-container" id="loginPage">
+        <div class="login-header">
+            <h1>🔐 教师登录</h1>
+            <p>请登录以使用视频上传功能</p>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" placeholder="请输入用户名" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" placeholder="请输入密码" required>
+            </div>
+            
+            <button type="submit" class="login-btn" id="loginBtn">登录</button>
+        </form>
+        
+        <div class="status-message" id="loginStatus"></div>
+        
+        <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px; font-size: 13px; color: #856404;">
+            <strong>提示：</strong>演示账号<br>
+            用户名：admin<br>
+            密码：123456
+        </div>
+        
+        <div class="switch-form">
+            还没有账号？<a onclick="showRegisterPage()">立即注册</a>
+        </div>
+        
+        <div class="admin-link">
+            <a href="admin.html" target="_blank">进入管理后台 →</a>
+        </div>
+    </div>
+
+    <!-- 注册页面 -->
+    <div class="register-container hidden" id="registerPage">
+        <div class="login-header">
+            <h1>📱 教师注册</h1>
+            <p>使用手机号快速注册</p>
+        </div>
+        
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="regUsername">用户名</label>
+                <input type="text" id="regUsername" placeholder="请设置用户名（3-20位）" required minlength="3" maxlength="20">
+            </div>
+            
+            <div class="form-group">
+                <label for="regPhone">手机号</label>
+                <div class="phone-input-group">
+                    <input type="tel" id="regPhone" placeholder="请输入11位手机号" required pattern="^1[3-9]\d{9}$" maxlength="11">
+                    <button type="button" class="verify-btn" id="sendCodeBtn" onclick="sendVerifyCode()">获取验证码</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="regCode">验证码</label>
+                <input type="text" id="regCode" placeholder="请输入6位验证码" required maxlength="6" pattern="^\d{6}$">
+            </div>
+            
+            <div class="form-group">
+                <label for="regPassword">密码</label>
+                <input type="password" id="regPassword" placeholder="请设置密码（6-20位）" required minlength="6" maxlength="20">
+            </div>
+            
+            <div class="form-group">
+                <label for="regConfirmPassword">确认密码</label>
+                <input type="password" id="regConfirmPassword" placeholder="请再次输入密码" required>
+            </div>
+            
+            <button type="submit" class="login-btn" id="registerBtn">注册</button>
+        </form>
+        
+        <div class="status-message" id="registerStatus"></div>
+        
+        <div class="switch-form">
+            已有账号？<a onclick="showLoginPage()">立即登录</a>
+        </div>
+    </div>
+
+    <!-- 视频上传页面（登录后显示） -->
+    <div class="upload-container hidden" id="uploadPage">
+            <div class="user-info">
+                <span id="currentUser">欢迎，用户</span>
+                <button class="logout-btn" id="logoutBtn" style="margin-right: 10px;">退出登录</button>
+                <button onclick="showEditProfileModal()" style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px;">✏️ 编辑个人信息</button>
+            </div>
+            
+            <div style="text-align: center; margin-bottom: 20px;">
+                <a href="admin.html" target="_blank" style="color: #667eea; text-decoration: none; font-size: 14px; margin-right: 20px;">📊 进入管理后台</a>
+                <a href="student.html" target="_blank" style="color: #764ba2; text-decoration: none; font-size: 14px;">🎓 查看学生端</a>
+            </div>
+
+        <h1>📹 视频上传</h1>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">🎬</div>
+            <div class="upload-text">点击或拖拽视频文件到此处</div>
+            <div class="upload-hint">支持 MP4、AVI、MOV、WMV 格式</div>
+            <input type="file" id="fileInput" accept="video/*">
+        </div>
+
+        <div class="video-preview" id="videoPreview">
+            <div class="video-info">
+                <div class="video-name" id="videoName"></div>
+                <div class="video-size" id="videoSize"></div>
+            </div>
+            <video id="videoPlayer" controls></video>
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <!-- 课程信息表单 -->
+        <div class="course-form" id="courseForm">
+            <h3>📚 课程信息</h3>
+            
+            <div class="form-group">
+                <label for="subject">学科 <span class="required">*</span></label>
+                <input type="text" id="subject" placeholder="请输入学科名称（如：数学、英语等）" required maxlength="50">
+            </div>
+            
+            <div class="form-group">
+                <label for="personalIntro">个人简介 <span class="required">*</span></label>
+                <textarea id="personalIntro" placeholder="请介绍您的教学背景、教学经验等（最多500字）" maxlength="500" required></textarea>
+                <div class="char-count"><span id="personalIntroCount">0</span>/500</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="courseIntro">课程简介 <span class="required">*</span></label>
+                <textarea id="courseIntro" placeholder="请介绍本课程的主要内容、教学目标等（最多1000字）" maxlength="1000" required></textarea>
+                <div class="char-count"><span id="courseIntroCount">0</span>/1000</div>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="upload-btn" id="uploadBtn" disabled>上传视频</button>
+            <button class="cancel-btn" id="cancelBtn">取消</button>
+        </div>
+
+        <div class="status-message" id="statusMessage"></div>
+        
+        <!-- 我的视频列表 -->
+        <div style="margin-top: 40px; border-top: 2px solid #e0e0e0; padding-top: 30px;">
+            <h2 style="text-align: center; color: #333; margin-bottom: 20px;">📚 我的视频</h2>
+            <div id="myVideosList" style="min-height: 100px;">
+                <p style="text-align: center; color: #999;">加载中...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 个人信息完善页面 -->
+    <div class="profile-form-container hidden" id="profilePage">
+        <div style="text-align: right; margin-bottom: 10px;">
+            <button onclick="logout()" style="background: #ff6b6b; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px;">退出登录</button>
+        </div>
+        <form class="profile-form" id="profileForm">
+            <h3>👤 完善个人信息</h3>
+            <p style="text-align: center; color: #666; margin-bottom: 30px;">请填写您的个人信息，审核通过后方可上传视频</p>
+            
+            <div class="photo-upload">
+                <div class="photo-preview" id="photoPreview" onclick="document.getElementById('teacherPhoto').click()">
+                    <div class="placeholder">
+                        <div style="font-size: 40px; margin-bottom: 5px;">📷</div>
+                        <div>点击上传照片</div>
+                    </div>
+                </div>
+                <input type="file" id="teacherPhoto" accept="image/*" style="display: none;">
+                <div class="photo-hint">支持 JPG、PNG 格式，建议尺寸 200x200</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="teacherName">姓名 <span class="required">*</span></label>
+                <input type="text" id="teacherName" placeholder="请输入您的真实姓名" required maxlength="20">
+            </div>
+            
+            <div class="form-group">
+                <label for="teacherSubject">所教科目 <span class="required">*</span></label>
+                <input type="text" id="teacherSubject" placeholder="例如：数学、英语、物理等" required maxlength="50">
+            </div>
+            
+            <div class="form-group">
+                <label for="teacherIntro">个人简介 <span class="required">*</span></label>
+                <textarea id="teacherIntro" placeholder="请介绍您的教学理念、教学风格等（最多500字）" maxlength="500" required style="min-height: 120px;"></textarea>
+                <div class="char-count"><span id="teacherIntroCount">0</span>/500</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="teacherExperience">学习、执教经历 <span class="required">*</span></label>
+                <textarea id="teacherExperience" placeholder="请详细描述您的学历背景、教学经历、获得的荣誉等（最多1000字）" maxlength="1000" required style="min-height: 150px;"></textarea>
+                <div class="char-count"><span id="teacherExperienceCount">0</span>/1000</div>
+            </div>
+            
+            <button type="submit" class="login-btn" id="submitProfileBtn">提交审核</button>
+        </form>
+        
+        <div class="status-message" id="profileStatus"></div>
+    </div>
+
+    <!-- 等待审核提示页面 -->
+    <div class="profile-form-container hidden" id="waitingApprovalPage">
+        <div style="text-align: right; margin-bottom: 10px;">
+            <button onclick="logout()" style="background: #ff6b6b; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px;">退出登录</button>
+        </div>
+        <div style="text-align: center; padding: 40px 20px;">
+            <div style="font-size: 80px; margin-bottom: 20px;">⏳</div>
+            <h2 style="color: #333; margin-bottom: 15px;">等待管理员审核</h2>
+            <p style="color: #666; line-height: 1.8; margin-bottom: 30px;">
+                您的个人信息已提交，正在等待管理员审核。<br>
+                审核通过后，您将可以上传视频课程。
+            </p>
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; color: #856404; margin-bottom: 30px;">
+                <strong>提示：</strong>审核通常需要1-2个工作日，请耐心等待。
+            </div>
+            <button class="login-btn" onclick="checkProfileStatus()" style="max-width: 200px;">刷新状态</button>
+        </div>
+    </div>
+
+    <!-- 编辑个人信息模态框 -->
+    <div id="editProfileModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; border-radius: 20px; padding: 40px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; position: relative;">
+            <button onclick="closeEditProfileModal()" style="position: absolute; top: 15px; right: 15px; background: #ff6b6b; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 18px;">&times;</button>
+            <h2 style="text-align: center; color: #333; margin-bottom: 30px;">✏️ 编辑个人信息</h2>
+            <form id="editProfileForm">
+                <div class="form-group">
+                    <label for="editName">姓名 <span class="required">*</span></label>
+                    <input type="text" id="editName" required maxlength="20">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editSubject">所教科目 <span class="required">*</span></label>
+                    <input type="text" id="editSubject" required maxlength="50">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editIntro">个人简介 <span class="required">*</span></label>
+                    <textarea id="editIntro" required maxlength="500" style="min-height: 120px;"></textarea>
+                    <div class="char-count"><span id="editIntroCount">0</span>/500</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editExperience">学习、执教经历 <span class="required">*</span></label>
+                    <textarea id="editExperience" required maxlength="1000" style="min-height: 150px;"></textarea>
+                    <div class="char-count"><span id="editExperienceCount">0</span>/1000</div>
+                </div>
+                
+                <button type="submit" class="login-btn" style="width: 100%;">保存修改</button>
+            </form>
+            <div class="status-message" id="editProfileStatus"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== API配置 ====================
+        const API_BASE = 'https://video-cse-api-v-fyiixqxwn.cn-hangzhou.fcapp.run/api';
+        let authToken = localStorage.getItem('authToken');
+
+        // API请求辅助函数
+        async function apiRequest(endpoint, options = {}) {
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            if (authToken) {
+                defaultOptions.headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    ...defaultOptions,
+                    ...options
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || '请求失败');
+                }
+
+                return data;
+            } catch (error) {
+                console.error('API请求错误:', error);
+                throw error;
+            }
+        }
+
+        // 保存token
+        function saveToken(token) {
+            authToken = token;
+            localStorage.setItem('authToken', token);
+        }
+
+        // 清除token
+        function clearToken() {
+            authToken = null;
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+        }
+
+        // 登录相关元素
+        const loginPage = document.getElementById('loginPage');
+        const uploadPage = document.getElementById('uploadPage');
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginStatus = document.getElementById('loginStatus');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const currentUser = document.getElementById('currentUser');
+
+        // 检查是否已登录
+        async function checkLogin() {
+            const user = localStorage.getItem('currentUser');
+            if (user) {
+                await showUploadPage(user);
+            } else {
+                showLoginPage();
+            }
+        }
+
+        // 显示登录页面
+        function showLoginPage() {
+            loginPage.classList.remove('hidden');
+            uploadPage.classList.add('hidden');
+        }
+
+        // 显示上传页面（异步）
+        async function showUploadPage(username) {
+            try {
+                // 尝试从API获取个人信息状态
+                const result = await apiRequest('/profiles/me');
+                
+                if (result.success && result.data) {
+                    const profile = result.data;
+                    if (profile.status === 'pending') {
+                        // 待审核
+                        loginPage.classList.add('hidden');
+                        document.getElementById('profilePage').classList.add('hidden');
+                        document.getElementById('waitingApprovalPage').classList.remove('hidden');
+                        uploadPage.classList.add('hidden');
+                        return;
+                    } else if (profile.status === 'approved') {
+                        // 已通过
+                        loginPage.classList.add('hidden');
+                        document.getElementById('profilePage').classList.add('hidden');
+                        document.getElementById('waitingApprovalPage').classList.add('hidden');
+                        uploadPage.classList.remove('hidden');
+                        currentUser.textContent = `欢迎，${username}`;
+                        // 加载我的视频列表
+                        loadMyVideos();
+                        return;
+                    }
+                }
+                
+                // 如果没有个人信息或出错，显示填写表单
+                loginPage.classList.add('hidden');
+                document.getElementById('profilePage').classList.remove('hidden');
+                document.getElementById('waitingApprovalPage').classList.add('hidden');
+                uploadPage.classList.add('hidden');
+            } catch (error) {
+                // API失败时，显示填写表单
+                console.log('获取个人信息失败，显示填写表单');
+                loginPage.classList.add('hidden');
+                document.getElementById('profilePage').classList.remove('hidden');
+                document.getElementById('waitingApprovalPage').classList.add('hidden');
+                uploadPage.classList.add('hidden');
+            }
+        }
+
+        // 登录表单提交
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!username || !password) {
+                showLoginStatus('请填写用户名和密码！', 'error');
+                return;
+            }
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = '登录中...';
+            
+            try {
+                const result = await apiRequest('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (result.success) {
+                    saveToken(result.data.token);
+                    localStorage.setItem('currentUser', result.data.user.username);
+                    if (result.data.user.role === 'admin') {
+                        localStorage.setItem('adminLoggedIn', 'true');
+                    }
+                    showUploadPage(result.data.user.username);
+                    showLoginStatus('登录成功！', 'success');
+                                
+                    // 清空表单
+                    document.getElementById('username').value = '';
+                    document.getElementById('password').value = '';
+                }
+            } catch (error) {
+                showLoginStatus(error.message || '登录失败！', 'error');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = '登录';
+            }
+        });
+
+        // 退出登录
+        logoutBtn.addEventListener('click', () => {
+            clearToken();
+            localStorage.removeItem('adminLoggedIn');
+            showLoginPage();
+            hideStatus();
+            
+            // 重置上传页面状态
+            selectedFile = null;
+            fileInput.value = '';
+            videoPreview.classList.remove('active');
+            videoPlayer.src = '';
+            progressBar.classList.remove('active');
+            progressFill.style.width = '0%';
+            uploadBtn.disabled = true;
+        });
+
+        // 显示登录状态消息
+        function showLoginStatus(message, type) {
+            loginStatus.textContent = message;
+            loginStatus.className = 'status-message ' + type;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    loginStatus.className = 'status-message';
+                }, 2000);
+            }
+        }
+
+        // 初始化检查登录状态
+        checkLogin();
+
+        // 检查教师个人信息状态
+        function checkTeacherProfile(username) {
+            const profiles = JSON.parse(localStorage.getItem('teacherProfiles')) || [];
+            const profile = profiles.find(p => p.username === username);
+            
+            if (!profile) {
+                return 'none'; // 未填写
+            } else if (profile.status === 'pending') {
+                return 'pending'; // 待审核
+            } else if (profile.status === 'approved') {
+                return 'approved'; // 已通过
+            } else {
+                return 'none'; // 其他情况视为未填写
+            }
+        }
+
+        // 照片上传预览
+        let teacherPhotoData = null;
+        document.getElementById('teacherPhoto').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.startsWith('image/')) {
+                showProfileStatus('请选择图片文件！', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                teacherPhotoData = event.target.result;
+                const preview = document.getElementById('photoPreview');
+                preview.innerHTML = `<img src="${teacherPhotoData}" alt="照片">`;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 字符计数
+        document.getElementById('teacherIntro').addEventListener('input', function() {
+            document.getElementById('teacherIntroCount').textContent = this.value.length;
+        });
+
+        document.getElementById('teacherExperience').addEventListener('input', function() {
+            document.getElementById('teacherExperienceCount').textContent = this.value.length;
+        });
+
+        // 提交个人信息表单
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = localStorage.getItem('currentUser');
+            const name = document.getElementById('teacherName').value.trim();
+            const subject = document.getElementById('teacherSubject').value.trim();
+            const intro = document.getElementById('teacherIntro').value.trim();
+            const experience = document.getElementById('teacherExperience').value.trim();
+            
+            if (!name || !subject || !intro || !experience) {
+                showProfileStatus('请填写所有必填项！', 'error');
+                return;
+            }
+            
+            if (!teacherPhotoData) {
+                showProfileStatus('请上传个人照片！', 'error');
+                return;
+            }
+            
+            const submitBtn = document.getElementById('submitProfileBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '提交中...';
+            
+            try {
+                const result = await apiRequest('/profiles', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        name,
+                        subject,
+                        photo: teacherPhotoData,
+                        intro,
+                        experience
+                    })
+                });
+                
+                if (result.success) {
+                    showProfileStatus('提交成功！等待管理员审核。', 'success');
+                    
+                    setTimeout(() => {
+                        showUploadPage(username);
+                    }, 2000);
+                }
+            } catch (error) {
+                showProfileStatus(error.message || '提交失败！', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '提交审核';
+            }
+        });
+
+        // 检查个人信息状态（刷新按钮）
+        function checkProfileStatus() {
+            const username = localStorage.getItem('currentUser');
+            showUploadPage(username);
+        }
+
+        // 显示个人信息状态消息
+        function showProfileStatus(message, type) {
+            const profileStatus = document.getElementById('profileStatus');
+            profileStatus.textContent = message;
+            profileStatus.className = 'status-message ' + type;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    profileStatus.className = 'status-message';
+                }, 3000);
+            }
+        }
+
+        // 显示注册页面
+        function showRegisterPage() {
+            loginPage.classList.add('hidden');
+            document.getElementById('registerPage').classList.remove('hidden');
+            hideRegisterStatus();
+        }
+
+        // 显示登录页面
+        function showLoginPage() {
+            document.getElementById('registerPage').classList.add('hidden');
+            loginPage.classList.remove('hidden');
+            hideStatus();
+        }
+
+        // 发送验证码
+        let codeTimer = null;
+
+        async function sendVerifyCode() {
+            const phone = document.getElementById('regPhone').value.trim();
+            
+            // 验证手机号格式
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                showRegisterStatus('请输入正确的手机号！', 'error');
+                return;
+            }
+            
+            const sendCodeBtn = document.getElementById('sendCodeBtn');
+            
+            try {
+                // 调用API发送验证码
+                const response = await fetch(`${API_BASE}/auth/send-code`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone })
+                });
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.message || '发送失败');
+                }
+                
+                // 开发模式：显示验证码（生产环境应删除）
+                if (result.dev_code) {
+                    console.log('【开发模式】验证码:', result.dev_code);
+                    alert(`【开发模式】验证码：${result.dev_code}\n\n生产环境将发送到手机`);
+                }
+                
+                // 开始倒计时
+                let countdown = 60;
+                sendCodeBtn.disabled = true;
+                sendCodeBtn.textContent = `${countdown}秒后重试`;
+                
+                codeTimer = setInterval(() => {
+                    countdown--;
+                    if (countdown <= 0) {
+                        clearInterval(codeTimer);
+                        sendCodeBtn.disabled = false;
+                        sendCodeBtn.textContent = '获取验证码';
+                    } else {
+                        sendCodeBtn.textContent = `${countdown}秒后重试`;
+                    }
+                }, 1000);
+                
+                showRegisterStatus('✅ 验证码已发送，请注意查收！', 'success');
+            } catch (error) {
+                console.error('发送验证码失败:', error);
+                showRegisterStatus('❌ ' + error.message, 'error');
+            }
+        }
+
+        // 注册表单提交
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('regUsername').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const code = document.getElementById('regCode').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            
+            // 验证用户名
+            if (username.length < 3 || username.length > 20) {
+                showRegisterStatus('用户名长度为3-20位！', 'error');
+                return;
+            }
+            
+            // 验证手机号
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                showRegisterStatus('请输入正确的手机号！', 'error');
+                return;
+            }
+            
+            // 验证验证码（调用API）
+            if (!code || code.length !== 6) {
+                showRegisterStatus('请输入6位验证码！', 'error');
+                return;
+            }
+            
+            try {
+                const verifyResponse = await fetch(`${API_BASE}/auth/verify-code`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone, code })
+                });
+                
+                const verifyResult = await verifyResponse.json();
+                
+                if (!verifyResult.success) {
+                    showRegisterStatus('❌ ' + verifyResult.message, 'error');
+                    return;
+                }
+            } catch (error) {
+                console.error('验证失败:', error);
+                showRegisterStatus('❌ 验证失败，请重试', 'error');
+                return;
+            }
+            
+            // 验证密码
+            if (password.length < 6 || password.length > 20) {
+                showRegisterStatus('密码长度为6-20位！', 'error');
+                return;
+            }
+            
+            // 验证确认密码
+            if (password !== confirmPassword) {
+                showRegisterStatus('两次输入的密码不一致！', 'error');
+                return;
+            }
+            
+            const registerBtn = document.getElementById('registerBtn');
+            registerBtn.disabled = true;
+            registerBtn.textContent = '注册中...';
+            
+            try {
+                const result = await apiRequest('/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        username,
+                        password,
+                        phone,
+                        role: 'teacher'
+                    })
+                });
+                
+                if (result.success) {
+                    showRegisterStatus('注册成功！即将跳转到登录页面...', 'success');
+                    
+                    // 清空表单
+                    document.getElementById('regUsername').value = '';
+                    document.getElementById('regPhone').value = '';
+                    document.getElementById('regCode').value = '';
+                    document.getElementById('regPassword').value = '';
+                    document.getElementById('regConfirmPassword').value = '';
+                    verifyCode = '';
+                    
+                    // 2秒后跳转到登录页面
+                    setTimeout(() => {
+                        showLoginPage();
+                        registerBtn.disabled = false;
+                        registerBtn.textContent = '注册';
+                        
+                        // 清除倒计时
+                        if (codeTimer) {
+                            clearInterval(codeTimer);
+                            document.getElementById('sendCodeBtn').disabled = false;
+                            document.getElementById('sendCodeBtn').textContent = '获取验证码';
+                        }
+                    }, 2000);
+                }
+            } catch (error) {
+                showRegisterStatus(error.message || '注册失败！', 'error');
+                registerBtn.disabled = false;
+                registerBtn.textContent = '注册';
+            }
+        });
+
+        // 显示注册状态消息
+        function showRegisterStatus(message, type) {
+            const registerStatus = document.getElementById('registerStatus');
+            registerStatus.textContent = message;
+            registerStatus.className = 'status-message ' + type;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    registerStatus.className = 'status-message';
+                }, 3000);
+            }
+        }
+
+        // 隐藏注册状态消息
+        function hideRegisterStatus() {
+            document.getElementById('registerStatus').className = 'status-message';
+        }
+
+        // 上传相关元素
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const videoPreview = document.getElementById('videoPreview');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const videoName = document.getElementById('videoName');
+        const videoSize = document.getElementById('videoSize');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const statusMessage = document.getElementById('statusMessage');
+
+        let selectedFile = null;
+
+        // 点击上传区域
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // 文件选择
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        // 拖拽功能
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('video/')) {
+                handleFile(file);
+            } else {
+                showStatus('请选择视频文件！', 'error');
+            }
+        });
+
+        // 处理文件
+        function handleFile(file) {
+            // 再次检查个人信息状态
+            const username = localStorage.getItem('currentUser');
+            const profileStatus = checkTeacherProfile(username);
+            
+            if (profileStatus !== 'approved') {
+                showStatus('您的个人信息尚未通过审核，无法上传视频！', 'error');
+                return;
+            }
+            
+            selectedFile = file;
+            
+            // 显示文件信息
+            videoName.textContent = `文件名：${file.name}`;
+            videoSize.textContent = `大小：${formatFileSize(file.size)}`;
+            
+            // 预览视频
+            const url = URL.createObjectURL(file);
+            videoPlayer.src = url;
+            videoPreview.classList.add('active');
+            
+            // 显示课程信息表单
+            document.getElementById('courseForm').classList.add('active');
+            
+            // 隐藏状态消息
+            hideStatus();
+        }
+
+        // 上传视频
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            // 验证课程信息表单
+            const subject = document.getElementById('subject').value;
+            const personalIntro = document.getElementById('personalIntro').value.trim();
+            const courseIntro = document.getElementById('courseIntro').value.trim();
+
+            if (!subject) {
+                showStatus('请填写学科！', 'error');
+                return;
+            }
+
+            if (!personalIntro) {
+                showStatus('请填写个人简介！', 'error');
+                return;
+            }
+
+            if (!courseIntro) {
+                showStatus('请填写课程简介！', 'error');
+                return;
+            }
+
+            uploadBtn.disabled = true;
+            progressBar.classList.add('active');
+            hideStatus();
+
+            try {
+                const formData = new FormData();
+                formData.append('video', selectedFile);
+                formData.append('title', selectedFile.name);
+                formData.append('subject', subject);
+                formData.append('personalIntro', personalIntro);
+                formData.append('courseIntro', courseIntro);
+
+                const response = await fetch(`${API_BASE}/videos/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus('✅ 视频上传成功！等待管理员审核。', 'success');
+                    progressBar.classList.remove('active');
+                    
+                    // 刷新视频列表
+                    loadMyVideos();
+                    
+                    // 重置表单
+                    setTimeout(() => {
+                        cancelBtn.click();
+                    }, 2000);
+                } else {
+                    throw new Error(result.message || '上传失败');
+                }
+            } catch (error) {
+                showStatus('上传失败：' + error.message, 'error');
+                progressBar.classList.remove('active');
+            } finally {
+                uploadBtn.disabled = false;
+            }
+        });
+
+        // 取消
+        cancelBtn.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            videoPreview.classList.remove('active');
+            videoPlayer.src = '';
+            progressBar.classList.remove('active');
+            progressFill.style.width = '0%';
+            uploadBtn.disabled = true;
+            
+            // 隐藏并清空课程信息表单
+            document.getElementById('courseForm').classList.remove('active');
+            document.getElementById('subject').value = '';
+            document.getElementById('personalIntro').value = '';
+            document.getElementById('courseIntro').value = '';
+            document.getElementById('personalIntroCount').textContent = '0';
+            document.getElementById('courseIntroCount').textContent = '0';
+            
+            hideStatus();
+        });
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // 显示状态消息
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message ' + type;
+        }
+
+        // 隐藏状态消息
+        function hideStatus() {
+            statusMessage.className = 'status-message';
+        }
+
+        // 字符计数功能
+        document.getElementById('personalIntro').addEventListener('input', function() {
+            document.getElementById('personalIntroCount').textContent = this.value.length;
+        });
+
+        document.getElementById('courseIntro').addEventListener('input', function() {
+            document.getElementById('courseIntroCount').textContent = this.value.length;
+        });
+
+        // 保存视频记录
+        function saveVideoRecord(file, subject, personalIntro, courseIntro) {
+            const videos = JSON.parse(localStorage.getItem('videos')) || [];
+            const currentUser = localStorage.getItem('currentUser') || '未知用户';
+            
+            const newVideo = {
+                id: videos.length > 0 ? Math.max(...videos.map(v => v.id)) + 1 : 1,
+                name: file.name,
+                uploader: currentUser,
+                size: file.size,
+                uploadTime: new Date().toLocaleString(),
+                subject: subject,
+                personalIntro: personalIntro,
+                courseIntro: courseIntro,
+                status: 'pending'  // 待审核状态
+            };
+            
+            videos.push(newVideo);
+            localStorage.setItem('videos', JSON.stringify(videos));
+        }
+
+        // ==================== 视频列表功能 ====================
+        
+        // 加载我的视频列表
+        async function loadMyVideos() {
+            try {
+                const result = await apiRequest('/videos/my');
+                const container = document.getElementById('myVideosList');
+                
+                if (!result.success || !result.data || result.data.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <p>暂无上传的视频</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const videos = result.data;
+                let html = '<div class="video-list">';
+                
+                videos.forEach(video => {
+                    const statusClass = video.status === 'approved' ? 'status-approved' : 
+                                      video.status === 'rejected' ? 'status-rejected' : 'status-pending';
+                    const statusText = video.status === 'approved' ? '✅ 已通过' : 
+                                     video.status === 'rejected' ? '❌ 已拒绝' : '⏳ 待审核';
+                    
+                    html += `
+                        <div class="video-item">
+                            <div class="video-item-header">
+                                <div class="video-item-title">${escapeHtml(video.title)}</div>
+                                <span class="video-status ${statusClass}">${statusText}</span>
+                            </div>
+                            <div class="video-item-info">
+                                <div>📚 学科：${escapeHtml(video.subject)}</div>
+                                <div>📅 上传时间：${new Date(video.uploadedAt).toLocaleString('zh-CN')}</div>
+                                <div>👁️ 播放次数：${video.views || 0}</div>
+                            </div>
+                            ${video.status === 'rejected' && video.rejectReason ? `
+                                <div style="color: #721c24; font-size: 13px; margin-top: 8px; padding: 8px; background: #f8d7da; border-radius: 6px;">
+                                    <strong>拒绝原因：</strong>${escapeHtml(video.rejectReason)}
+                                </div>
+                            ` : ''}
+                            <div class="video-item-actions">
+                                <button class="btn-delete" onclick="deleteVideo('${video._id}', '${escapeHtml(video.title)}')">
+                                    🗑️ 删除视频
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('加载视频列表失败:', error);
+                document.getElementById('myVideosList').innerHTML = `
+                    <div class="empty-state">
+                        <p style="color: #ff6b6b;">加载失败，请刷新页面重试</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 删除视频
+        async function deleteVideo(videoId, videoTitle) {
+            if (!confirm(`确定要删除视频 "${videoTitle}" 吗？此操作不可恢复！`)) {
+                return;
+            }
+
+            try {
+                const result = await apiRequest(`/videos/${videoId}`, {
+                    method: 'DELETE'
+                });
+
+                if (result.success) {
+                    alert('✅ 视频删除成功！');
+                    // 刷新视频列表
+                    loadMyVideos();
+                } else {
+                    throw new Error(result.message || '删除失败');
+                }
+            } catch (error) {
+                console.error('删除视频失败:', error);
+                alert('❌ 删除失败：' + error.message);
+            }
+        }
+
+        // HTML转义函数
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ==================== 编辑个人信息功能 ====================
+        
+        // 显示编辑个人信息模态框
+        async function showEditProfileModal() {
+            try {
+                const result = await apiRequest('/profiles/me');
+                
+                if (result.success && result.data) {
+                    const profile = result.data;
+                    
+                    // 填充表单
+                    document.getElementById('editName').value = profile.name || '';
+                    document.getElementById('editSubject').value = profile.subject || '';
+                    document.getElementById('editIntro').value = profile.intro || '';
+                    document.getElementById('editExperience').value = profile.experience || '';
+                    
+                    // 更新字符计数
+                    document.getElementById('editIntroCount').textContent = (profile.intro || '').length;
+                    document.getElementById('editExperienceCount').textContent = (profile.experience || '').length;
+                    
+                    // 显示模态框
+                    document.getElementById('editProfileModal').style.display = 'flex';
+                } else {
+                    alert('❌ 获取个人信息失败');
+                }
+            } catch (error) {
+                console.error('获取个人信息失败:', error);
+                alert('❌ 获取个人信息失败：' + error.message);
+            }
+        }
+
+        // 关闭编辑个人信息模态框
+        function closeEditProfileModal() {
+            document.getElementById('editProfileModal').style.display = 'none';
+            document.getElementById('editProfileForm').reset();
+            document.getElementById('editProfileStatus').className = 'status-message';
+        }
+
+        // 提交编辑个人信息表单
+        document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '保存中...';
+            
+            try {
+                const data = {
+                    name: document.getElementById('editName').value.trim(),
+                    subject: document.getElementById('editSubject').value.trim(),
+                    intro: document.getElementById('editIntro').value.trim(),
+                    experience: document.getElementById('editExperience').value.trim()
+                };
+                
+                const result = await apiRequest('/profiles/me', {
+                    method: 'PUT',
+                    body: JSON.stringify(data)
+                });
+                
+                if (result.success) {
+                    alert('✅ 个人信息更新成功！');
+                    closeEditProfileModal();
+                } else {
+                    throw new Error(result.message || '更新失败');
+                }
+            } catch (error) {
+                console.error('更新个人信息失败:', error);
+                const statusEl = document.getElementById('editProfileStatus');
+                statusEl.textContent = '❌ 更新失败：' + error.message;
+                statusEl.className = 'status-message error';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '保存修改';
+            }
+        });
+
+        // 编辑表单字符计数
+        document.getElementById('editIntro').addEventListener('input', function() {
+            document.getElementById('editIntroCount').textContent = this.value.length;
+        });
+
+        document.getElementById('editExperience').addEventListener('input', function() {
+            document.getElementById('editExperienceCount').textContent = this.value.length;
+        });
+    </script>
+</body>
+</html>
